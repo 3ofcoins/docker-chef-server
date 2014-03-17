@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e -x
+sysctl -w kernel.shmmax=17179869184 kernel.shmall=4194304
+exec chef-server-ctl reconfigure
