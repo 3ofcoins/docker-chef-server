@@ -10,8 +10,9 @@ VOLUME /var/opt/chef-server
 ADD https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.0.11-1.ubuntu.12.04_amd64.deb /chef-server.deb
 RUN dpkg -i /chef-server.deb && rm -v /chef-server.deb
 
+ADD init.rb /init.rb
 ADD bootstrap-run /opt/chef-server/sv/bootstrap/run
 ADD bootstrap-finish /opt/chef-server/sv/bootstrap/finish
 ADD chef-server.rb /etc/chef-server/chef-server.rb
 
-CMD [ "/opt/chef-server/embedded/bin/runsvdir", "-P", "/opt/chef-server/sv", "log: ..........................................................................................................................................................................................................................................................................................................................................................................................................." ]
+CMD [ "/opt/chef-server/embedded/bin/ruby", "/init.rb" ]
