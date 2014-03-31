@@ -12,6 +12,11 @@ Signal.trap("TERM") do
   Process.kill('HUP', $pid)
 end
 
+Signal.trap("INT") do
+  puts "# Got SIGINT, shutting down runsvdir ..."
+  Process.kill('HUP', $pid)
+end
+
 while true
   chld = Process.wait
   if chld == $pid
