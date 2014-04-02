@@ -4,6 +4,7 @@
 # Some reading: http://felipec.wordpress.com/2013/11/04/init/
 
 require 'date'
+require 'fileutils'
 
 STDOUT.sync = true
 
@@ -20,8 +21,9 @@ end
 
 unless File.exist?('/var/log/chef-server') ||
     File.symlink?('/var/log/chef-server')
-  log 'Linking /var/log/chef-server -> /var/opt/chef-server/log'
-  File.symlink '/var/opt/chef-server/log', '/var/log/chef-server'
+  log 'Initializing log directory'
+  FileUtils.mkdir_p '/var/opt/chef-server/log'
+  FileUtils.ln_s '/var/opt/chef-server/log', '/var/log/chef-server'
 end
 
 log 'Starting runsvdir ...'
