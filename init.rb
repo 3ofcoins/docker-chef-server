@@ -5,6 +5,11 @@ STDOUT.sync = true
 puts "# Initializing sysctl ..."
 system 'sysctl -w kernel.shmmax=17179869184 kernel.shmall=4194304' or fail "Sysctl FAIL"
 
+unless File.exist?('/var/log/chef-server') || File.symlink?('/var/log/chef-server')
+  puts '# Linking /var/log/chef-server -> /var/opt/chef-server/log'
+  File.symlink '/var/log/chef-server', '/var/opt/chef-server/log'
+end
+
 puts "# Starting runsvdir ..."
 $pid = Process.spawn '/opt/chef-server/embedded/bin/runsvdir', '-P', '/opt/chef-server/sv', "log: #{'.' * 128}"
 puts "# Started runsvdir #{$pid}"
