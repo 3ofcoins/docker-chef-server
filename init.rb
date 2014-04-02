@@ -1,3 +1,5 @@
+# Some reading: http://felipec.wordpress.com/2013/11/04/init/
+
 STDOUT.sync = true
 
 puts "# Initializing sysctl ..."
@@ -15,6 +17,23 @@ end
 Signal.trap("INT") do
   puts "# Got SIGINT, shutting down runsvdir ..."
   Process.kill('HUP', $pid)
+end
+
+Signal.trap("SIGCHLD") do
+  loop do
+    begin
+      chld = Process.wait(-1, Process::WNOHANG)
+      break if chld == nil
+      puts "# Reaped PID #{chld} (#{$?})"
+    rescue Errno::ECHILD
+      break
+    end
+  end
+end
+
+unless File.exist? '/var/opt/chef-server/bootstrapped'
+  pid = Process.spawn '/usr/bin/chef-server-ctl', 'reconfigure'
+  puts "# Not bootstrapped, running `chef-server-ctl reconfigure' (#{pid})"
 end
 
 while true
