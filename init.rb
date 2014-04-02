@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# rubocop:disable GlobalVars
+# rubocop:disable GlobalVars, SpecialGlobalVars
 
 # Some reading: http://felipec.wordpress.com/2013/11/04/init/
 
@@ -50,13 +50,13 @@ end
 loop do
   chld = Process.wait
   if chld == $pid
-    log "Runsvdir exited (#{$CHILD_STATUS}), exiting"
-    if $CHILD_STATUS.success? || $CHILD_STATUS.exitstatus == 111
+    log "Runsvdir exited (#{$?}), exiting"
+    if $?.success? || $?.exitstatus == 111
       break
     else
-      exit $CHILD_STATUS.exitstatus
+      exit $?.exitstatus
     end
   else
-    log "Reaped PID #{chld} (#{$CHILD_STATUS})"
+    log "Reaped PID #{chld} (#{$?})"
   end
 end
