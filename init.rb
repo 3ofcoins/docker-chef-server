@@ -21,7 +21,7 @@ end
 unless File.exist?('/var/log/chef-server') ||
     File.symlink?('/var/log/chef-server')
   log 'Linking /var/log/chef-server -> /var/opt/chef-server/log'
-  File.symlink '/var/log/chef-server', '/var/opt/chef-server/log'
+  File.symlink '/var/opt/chef-server/log', '/var/log/chef-server'
 end
 
 log 'Starting runsvdir ...'
