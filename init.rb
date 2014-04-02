@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# rubocop:disable GlobalVars
+
 # Some reading: http://felipec.wordpress.com/2013/11/04/init/
 
 require 'date'
@@ -8,40 +11,33 @@ def log(message)
   puts "[#{DateTime.now}] INIT: #{message}"
 end
 
-log "Starting #{$0}"
+log "Starting #{$PROGRAM_NAME}"
 
-log "Initializing sysctl for postgres"
-system 'sysctl -w kernel.shmmax=17179869184 kernel.shmall=4194304' or fail "Sysctl FAIL"
+log 'Initializing sysctl for postgres'
+unless system 'sysctl -w kernel.shmmax=17179869184 kernel.shmall=4194304'
+  fail 'sysctl FAIL'
+end
 
-unless File.exist?('/var/log/chef-server') || File.symlink?('/var/log/chef-server')
+unless File.exist?('/var/log/chef-server') ||
+    File.symlink?('/var/log/chef-server')
   log 'Linking /var/log/chef-server -> /var/opt/chef-server/log'
   File.symlink '/var/log/chef-server', '/var/opt/chef-server/log'
 end
 
-log "Starting runsvdir ..."
-$pid = Process.spawn '/opt/chef-server/embedded/bin/runsvdir', '-P', '/opt/chef-server/sv', "log: #{'.' * 128}"
+log 'Starting runsvdir ...'
+$pid = Process.spawn(
+  '/opt/chef-server/embedded/bin/runsvdir', '-P', '/opt/chef-server/sv',
+  "log: #{'.' * 128}")
 log "Started runsvdir (#{$pid})"
 
-Signal.trap("TERM") do
-  log "Got SIGTERM, shutting down runsvdir ..."
+Signal.trap('TERM') do
+  log 'Got SIGTERM, shutting down runsvdir ...'
   Process.kill('HUP', $pid)
 end
 
-Signal.trap("INT") do
-  log "Got SIGINT, shutting down runsvdir ..."
+Signal.trap('INT') do
+  log 'Got SIGINT, shutting down runsvdir ...'
   Process.kill('HUP', $pid)
-end
-
-Signal.trap("SIGCHLD") do
-  loop do
-    begin
-      chld = Process.wait(-1, Process::WNOHANG)
-      break if chld == nil
-      log "Reaped PID #{chld} (#{$?}) in SIGCHLD handler"
-    rescue Errno::ECHILD
-      break
-    end
-  end
 end
 
 unless File.exist? '/var/opt/chef-server/bootstrapped'
@@ -49,16 +45,16 @@ unless File.exist? '/var/opt/chef-server/bootstrapped'
   log "Not bootstrapped, running `chef-server-ctl reconfigure' (#{pid})"
 end
 
-while true
+loop do
   chld = Process.wait
   if chld == $pid
-    log "Runsvdir exited (#{$?}), exiting"
-    if $?.success? || $?.exitstatus == 111
+    log "Runsvdir exited (#{$CHILD_STATUS}), exiting"
+    if $CHILD_STATUS.success? || $CHILD_STATUS.exitstatus == 111
       break
     else
-      exit $?.exitstatus
+      exit $CHILD_STATUS.exitstatus
     end
   else
-    log "Reaped PID #{chld} (#{$?}) in main loop"
+    log "Reaped PID #{chld} (#{$CHILD_STATUS})"
   end
 end
