@@ -19,11 +19,14 @@ unless system 'sysctl -w kernel.shmmax=17179869184 kernel.shmall=4194304'
   fail 'sysctl FAIL'
 end
 
-unless File.exist?('/var/log/chef-server') ||
-    File.symlink?('/var/log/chef-server')
-  log 'Initializing log directory'
-  FileUtils.mkdir_p '/var/opt/chef-server/log'
-  FileUtils.ln_s '/var/opt/chef-server/log', '/var/log/chef-server'
+{ '/var/log/chef-server' => 'log',
+  '/etc/chef-server' => 'etc'
+}.each do |target, link|
+  unless File.exist?(target) || File.symlink?(target)
+    log "Linking #{target} as #{link}"
+    FileUtils.mkdir_p "/var/opt/chef-server/#{link}"
+    FileUtils.ln_s "/var/opt/chef-server/#{link}", target
+  end
 end
 
 log 'Starting runsvdir ...'
