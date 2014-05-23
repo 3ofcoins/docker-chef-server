@@ -10,8 +10,9 @@ else
 end
 
 nginx['url'] = _uri.to_s
-bookshelf['external_uri'] = _uri.to_s
-erchef['base_resource_uri'] = _uri.to_s
+bookshelf['url'] = _uri.to_s
+bookshelf['external_url'] = _uri.to_s
+erchef['base_resource_url'] = _uri.to_s
 
 nginx['enable_non_ssl'] = true
 chef_server_webui['enable'] = !ENV['DISABLE_WEBUI']

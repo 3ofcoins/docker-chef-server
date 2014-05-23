@@ -7,7 +7,7 @@ ENV PATH /opt/chef-server/embedded/sbin:/opt/chef-server/embedded/bin:/usr/local
 EXPOSE 80 443
 VOLUME /var/opt/chef-server
 
-ADD https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.0.12-1.ubuntu.12.04_amd64.deb /chef-server.deb
+ADD https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.1.0-1_amd64.deb
 RUN dpkg -i /chef-server.deb && rm -v /chef-server.deb
 
 ADD init.rb /init.rb
