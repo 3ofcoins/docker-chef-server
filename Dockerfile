@@ -1,6 +1,7 @@
 # -*- conf -*-
 
 FROM ubuntu:12.04
+#TAG 11.1.0
 MAINTAINER Maciej Pasternacki <maciej@3ofcoins.net>
 
 ENV PATH /opt/chef-server/embedded/sbin:/opt/chef-server/embedded/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
