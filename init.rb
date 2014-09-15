@@ -8,58 +8,124 @@ require 'fileutils'
 
 STDOUT.sync = true
 
+$processes = {}
+
 def log(message)
   puts "[#{DateTime.now}] INIT: #{message}"
 end
 
-log "Starting #{$PROGRAM_NAME}"
-
-log 'Initializing sysctl for postgres'
-unless system 'sysctl -w kernel.shmmax=17179869184 kernel.shmall=4194304'
-  fail 'sysctl FAIL'
+def run!(*args, &block)
+  log "Starting: #{args}" if ENV['DEBUG']
+  pid = Process.spawn(*args)
+  log "Started #{pid}: #{args.join ' '}"
+  $processes[pid] = block || ->{ log "#{args.join ' '}: #{$?}" }
+  pid
 end
 
-{ '/var/log/chef-server' => 'log',
-  '/etc/chef-server' => 'etc'
-}.each do |target, link|
-  unless File.exist?(target) || File.symlink?(target)
-    log "Linking #{target} as #{link}"
-    FileUtils.mkdir_p "/var/opt/chef-server/#{link}"
-    FileUtils.ln_s "/var/opt/chef-server/#{link}", target
+def reconfigure! reason=nil
+  if $reconf_pid
+    if reason
+      log "#{reason}, but cannot reconfigure: already running"
+    else
+      log "Cannot reconfigure: already running"
+    end
+    return
+  end
+
+  if reason
+    log "#{reason}, reconfiguring"
+  else
+    log "Reconfiguring"
+  end
+
+  $reconf_pid = run! '/usr/bin/chef-server-ctl', 'reconfigure' do
+    log "Reconfiguration finished: #{$?}"
+    $reconf_pid = nil
   end
 end
 
-log 'Starting runsvdir ...'
-$pid = Process.spawn(
-  '/opt/chef-server/embedded/bin/runsvdir', '-P', '/opt/chef-server/sv',
-  "log: #{'.' * 128}")
-log "Started runsvdir (#{$pid})"
+def shutdown!
+  unless $runsvdir_pid
+    log "ERROR: no runsvdir pid at exit"
+    exit 1
+  end
 
-Signal.trap('TERM') do
-  log 'Got SIGTERM, shutting down runsvdir ...'
-  Process.kill('HUP', $pid)
+  if $reconf_pid
+    log "Reconfigure running as #{$reconf_pid}, stopping..."
+    Process.kill 'TERM', $reconf_pid
+    (1..5).each do
+      if $reconf_pid
+        sleep 1
+      else
+        break
+      end
+    end
+    if $reconf_pid
+      Process.kill 'KILL', $reconf_pid
+    end
+  end
+
+  run! '/usr/bin/chef-server-ctl', 'stop' do
+    log 'chef-server-ctl stop finished, stopping runsvdir'
+    Process.kill('HUP', $runsvdir_pid)
+  end
 end
 
-Signal.trap('INT') do
-  log 'Got SIGINT, shutting down runsvdir ...'
-  Process.kill('HUP', $pid)
+log "Starting #{$PROGRAM_NAME}"
+
+{ shmmax: 17179869184, shmall: 4194304 }.each do |param, value|
+  if ( actual = File.read("/proc/sys/kernel/#{param}").to_i ) < value
+    log "kernel.#{param} = #{actual}, setting to #{value}."
+    begin
+      File.write "/proc/sys/kernel/#{param}", value.to_s
+    rescue
+      log "Cannot set kernel.#{param} to #{value}: #{$!}"
+      log "You may need to run the container in privileged mode or set sysctl on host."
+      raise
+    end
+  end
 end
 
-unless File.exist? '/var/opt/chef-server/bootstrapped'
-  pid = Process.spawn '/usr/bin/chef-server-ctl', 'reconfigure'
-  log "Not bootstrapped, running `chef-server-ctl reconfigure' (#{pid})"
+log 'Preparing configuration ...'
+FileUtils.mkdir_p %w'/var/opt/opscode/log /var/opt/opscode/etc /.chef/env', verbose: true
+FileUtils.cp '/.chef/chef-server.rb', '/var/opt/opscode/etc', verbose: true
+
+%w'PUBLIC_URL OC_ID_ADMINISTRATORS'.each do |var|
+  File.write(File.join('/.chef/env', var), ENV[var].to_s)
+end
+
+$runsvdir_pid = run! '/opt/opscode/embedded/bin/runsvdir-start' do
+  log "runsvdir exited: #{$?}"
+  if $?.success? || $?.exitstatus == 111
+    exit
+  else
+    exit $?.exitstatus
+  end
+end
+
+Signal.trap 'TERM' do
+  shutdown!
+end
+
+Signal.trap 'INT' do
+  shutdown!
+end
+
+Signal.trap 'HUP' do
+  reconfigure! 'Got SIGHUP'
+end
+
+Signal.trap 'USR1' do
+  log 'Chef Server status:'
+  run! '/usr/bin/chef-server-ctl', 'status'
+end
+
+unless File.exist? '/var/opt/opscode/bootstrapped'
+  reconfigure! 'Not bootstrapped'
 end
 
 loop do
-  chld = Process.wait
-  if chld == $pid
-    log "Runsvdir exited (#{$?}), exiting"
-    if $?.success? || $?.exitstatus == 111
-      break
-    else
-      exit $?.exitstatus
-    end
-  else
-    log "Reaped PID #{chld} (#{$?})"
-  end
+  log $? if ENV['DEBUG']
+  handler = $processes.delete(Process.wait)
+  handler.call if handler
 end

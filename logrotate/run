@@ -1,0 +1,5 @@
+#!/bin/sh
+# /etc/cron.hourly/opc_logrotate
+set -e
+sleep 3600
+exec nice -n 19 ionice -c3 logrotate /etc/opscode/logrotate.conf
