@@ -3,8 +3,10 @@ Chef Server
 
 This image runs
 [Chef Server 12](https://downloads.getchef.com/chef-server/). The
-latest version is published as `3ofcoins/chef-server`. Git repository
-containing the Dockerfile lives at
+latest version is published as `3ofcoins/chef-server:latest`. Version
+tags are available; current one is `3ofcoins/chef-server:12.0.0`.
+
+Git repository containing the Dockerfile lives at
 https://github.com/3ofcoins/docker-images/tree/master/public/chef-server
 
 Environment Variables
