@@ -1,13 +1,13 @@
 # -*- conf -*-
 
 FROM ubuntu:12.04
-#TAG 12.0.0-rc.3
+#TAG 12.0.0-rc.6
 MAINTAINER Maciej Pasternacki <maciej@3ofcoins.net>
 
 EXPOSE 80 443
 VOLUME /var/opt/opscode
 
-ADD https://packagecloud.io/chef/stable/download?distro=precise&filename=chef-server-core_12.0.0-rc.3-1_amd64.deb /chef-server-core.deb
+ADD https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/precise/chef-server-core_12.0.0-rc.6-1_amd64.deb /chef-server-core.deb
 
 RUN set -e -x ; \
     export DEBIAN_FRONTEND=noninteractive ; \
