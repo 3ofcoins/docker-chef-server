@@ -12,7 +12,7 @@ Environment Variables
 
  - `PUBLIC_URL` - should be configured to a full public URL of the
    endpoint (e.g. `https://chef.example.com`)
- - `OC_AD_ADMINISTRATORS` - if set, it should be a comma-separated
+ - `OC_ID_ADMINISTRATORS` - if set, it should be a comma-separated
    list of users that will be allowed to add oc_id applications
 
 Ports
