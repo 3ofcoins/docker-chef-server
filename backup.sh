@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+: ${KNIFE_HOME:=/etc/chef}
+export KNIFE_HOME
+
 ts=$(date -r backup -u +%Y%m%dT%H%M%SZ)
 destdir=/var/opt/opscode/backup/$ts
 
