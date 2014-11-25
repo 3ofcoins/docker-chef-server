@@ -15,7 +15,7 @@ RUN set -e -x ; \
     apt-get update -q --yes ; \
     apt-get install -q --yes logrotate vim-nox ; \
     dpkg -i /tmp/chef-server-core.deb /tmp/chef.deb ; \
-    rm -rf /tmp/*.deb /var/lib/apt/lists/* /var/cache/apt/archives/* ; \
+    rm -rf /tmp/*.deb /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/opscode ; \
     mkdir -p /etc/cron.hourly ; \
     ln -sfv /var/opt/opscode/log /var/log/opscode ; \
     ln -sfv /var/opt/opscode/etc /etc/opscode ; \
