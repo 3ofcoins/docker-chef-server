@@ -2,7 +2,7 @@ Chef Server
 ===========
 
 This image runs
-[Chef Server core](https://downloads.getchef.com/chef-server/). The
+[Chef Server 12](https://downloads.getchef.com/chef-server/). The
 latest version is published as `3ofcoins/chef-server`. Git repository
 containing the Dockerfile lives at
 https://github.com/3ofcoins/docker-images/tree/master/public/chef-server
@@ -65,7 +65,16 @@ one way of interacting with the software that is closest to
 interacting with a Chef Server installed directly on host (and thus
 closest to supported usage).
 
-You will need `nsenter` utility and
+This means you need Docker 1.3+ with `docker exec` feature, and run
+`chef-server-ctl` commands like:
+
+    docker exec $CONTAINER_ID chef-server-ctl status
+    docker exec $CONTAINER_ID chef-server-ctl user-create …
+    docker exec $CONTAINER_ID chef-server-ctl org-create …
+    docker exec $CONTAINER_ID chef-server-ctl …
+
+If you have Docker older than 1.3 and can't upgrade, you should be
+able to get by with `nsenter` utility and
 [`docker-enter`](https://github.com/jpetazzo/nsenter) script by
 [Jérôme Petazzoni](https://github.com/jpetazzo) on your Docker
 host. The easiest way to install it is to run the installer Docker
@@ -74,13 +83,8 @@ image:
     docker run --rm -v /usr/local/bin:/target jpetazzo/nsenter
 
 Then, you can use the `docker-enter` script to run `chef-server-ctl`
-commands (note that the command is `ctl`, not `chef-server-ctl`; `ctl`
-is a wrapper that sets missing environment variables, lack of which
-would confuse `chef-server-ctl`):
+commands:
 
-    docker-enter $CONTAINER_ID chef-server-ctl status
-    docker-enter $CONTAINER_ID chef-server-ctl user-add …
-    docker-enter $CONTAINER_ID chef-server-ctl org-add …
     docker-enter $CONTAINER_ID chef-server-ctl …
 
 ### Publishing the endpoint
@@ -136,9 +140,19 @@ A sample nginx configuration looks like this:
 
 Backup will be created in `/var/opt/opscode/backup/latest`, and all
 previous backups will be in their own timestamped directories. Backups
-will use hardlinks to share unchanged files.
+will use hardlinks to share unchanged files. The backups will take
+form of JSON files with user and organization details, and each
+organization's chef repository dump generated with `knife download`.
 
-Alternatively:
+There is no full restore script yet; you'll need to create orgs &
+users based on JSON files, and then use `knife upload` to upload each
+organization's data separately. The restore script is being worked on,
+but some pieces can't be restored (in particular, users' passwords),
+and other pieces seem tricky (in particular, ACLs).
+
+Alternatively, one can take a binary backup of data volume (it is not
+possible to read anything from such backup without starting up whole
+Chef server, and it takes much more disk space, though):
 
 1. `docker stop chef-server`
 2. Archive `/var/opt/opscode` volume (delete the `bootstrapped` file
@@ -149,7 +163,7 @@ Alternatively:
 Same thing works for upgrades: just reuse container, remembering to
 remove the `bootstrapped` file. You may also need to remove the
 symlinks in `/var/opt/opscode/service` and/or run `chef-server-ctl
-upgrade` via `docker-enter`.
+upgrade` via `docker exec`.
 
 ### Chef Plugins
 
