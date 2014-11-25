@@ -132,6 +132,14 @@ A sample nginx configuration looks like this:
 
 ### Backup and restore
 
+    $ docker exec chef-server chef-server-backup
+
+Backup will be created in `/var/opt/opscode/backup/latest`, and all
+previous backups will be in their own timestamped directories. Backups
+will use hardlinks to share unchanged files.
+
+Alternatively:
+
 1. `docker stop chef-server`
 2. Archive `/var/opt/opscode` volume (delete the `bootstrapped` file
    from the archive to force `chef-server-ctl reconfigure` run on the
