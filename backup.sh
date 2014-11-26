@@ -23,7 +23,7 @@ for org in $(chef-server-ctl org-list) ; do
 done
 
 cd ..
-hardlink .
+hardlink -t .
 
 test -d latest~ && rm -rf latest~
 test -d latest && mv latest latest~
