@@ -1,3 +1,4 @@
+# cat init.rb
 # -*- coding: utf-8 -*-
 # rubocop:disable GlobalVars, SpecialGlobalVars
 
@@ -39,10 +40,17 @@ def reconfigure! reason=nil
   end
 
   $reconf_pid = run! '/usr/bin/chef-server-ctl', 'reconfigure' do
-    log "Reconfiguration finished: #{$?}"
+    log "chef-server-ctl Reconfiguration finished: #{$?}"
     $reconf_pid = nil
   end
+
+  $reconf_manage_pid = run! '/usr/bin/chef-manage-ctl', 'reconfigure' do
+    log "chef-manage-ctl Reconfiguration finished: #{$?}"
+    $reconf_manage_pid = nil
+  end
+
 end
+
 
 def shutdown!
   unless $runsvdir_pid
@@ -69,6 +77,11 @@ def shutdown!
     log 'chef-server-ctl stop finished, stopping runsvdir'
     Process.kill('HUP', $runsvdir_pid)
   end
+
+  run! '/usr/bin/chef-manage-ctl', 'stop' do
+    log 'chef-manage-ctl stop finished, stopping runsvdir'
+    Process.kill('HUP', $runsvdir_manage_pid)
+  end
 end
 
 log "Starting #{$PROGRAM_NAME}"
@@ -87,6 +100,9 @@ log "Starting #{$PROGRAM_NAME}"
 end
 
 log 'Preparing configuration ...'
+run! 'echo never > /sys/kernel/mm/transparent_hugepage/enabled'
+run! 'sysctl -w net.core.somaxconn=1024'
+
 FileUtils.mkdir_p %w'/var/opt/opscode/log /var/opt/opscode/etc /.chef/env', verbose: true
 FileUtils.cp '/.chef/chef-server.rb', '/var/opt/opscode/etc', verbose: true
 
@@ -94,7 +110,18 @@ FileUtils.cp '/.chef/chef-server.rb', '/var/opt/opscode/etc', verbose: true
   File.write(File.join('/.chef/env', var), ENV[var].to_s)
 end
 
+
+
 $runsvdir_pid = run! '/opt/opscode/embedded/bin/runsvdir-start' do
+  log "runsvdir exited: #{$?}"
+  if $?.success? || $?.exitstatus == 111
+    exit
+  else
+    exit $?.exitstatus
+  end
+end
+
+$runsvdir_manage_pid = run! '/opt/chef-manage/embedded/bin/runsvdir-start' do
   log "runsvdir exited: #{$?}"
   if $?.success? || $?.exitstatus == 111
     exit
