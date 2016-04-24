@@ -8,7 +8,7 @@ cd "$tmpdir"
 # Install prerequisites
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q --yes
-apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates
+apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates apt-transport-https telnet curl nano
 
 # Download and install Chef's packages
 wget -nv https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/chef-server-core_12.4.1-1_amd64.deb
