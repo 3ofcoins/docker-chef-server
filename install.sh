@@ -11,12 +11,12 @@ apt-get update -q --yes
 apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates
 
 # Download and install Chef's packages
-wget -nv https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/chef-server-core_12.4.1-1_amd64.deb
-wget -nv https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/chef_12.7.2-1_amd64.deb
+wget -nv https://packages.chef.io/stable/ubuntu/14.04/chef-server-core_12.6.0-1_amd64.deb
+wget -nv https://packages.chef.io/stable/ubuntu/10.04/chef_12.10.24-1_amd64.deb
 
 sha1sum -c - <<EOF
-a75e8dbcce749adf61a60ca0ccf25fc041e4774a  chef-server-core_12.4.1-1_amd64.deb
-9bc701d90ba12c71fbe51a8bdcdf25e864375f4e  chef_12.7.2-1_amd64.deb
+eafc7aedd4966457cd77eb51f75da863947dde70  chef-server-core_12.6.0-1_amd64.deb
+7d30b300f95f00036919ee8bf3b95ab73429e57e  chef_12.10.24-1_amd64.deb
 EOF
 
 dpkg -i chef-server-core_12.4.1-1_amd64.deb chef_12.7.2-1_amd64.deb
