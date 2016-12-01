@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e -x
 
+SERVER_VERSION="12.10.0"
+SERVER_SHA1="95fce9f167972418b3f06b9e5fe95f8a3f0e5361"
+CLIENT_VERSION="12.16.42"
+CLIENT_SHA1="e720803538b5db3cc9924121e3aa9e5a7a03cf79"
+
 # Temporary work dir
 tmpdir="`mktemp -d`"
 cd "$tmpdir"
@@ -8,18 +13,19 @@ cd "$tmpdir"
 # Install prerequisites
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q --yes
-apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates
+apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates upstart-sysv # chefserver is not yet compatible with systemd
+update-initramfs -u
 
 # Download and install Chef's packages
-wget -nv https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/chef-server-core_12.4.1-1_amd64.deb
-wget -nv https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/chef_12.7.2-1_amd64.deb
+wget -nv https://packages.chef.io/stable/ubuntu/16.04/chef-server-core_${SERVER_VERSION}-1_amd64.deb
+wget -nv https://packages.chef.io/stable/ubuntu/16.04/chef_${CLIENT_VERSION}-1_amd64.deb
 
 sha1sum -c - <<EOF
-a75e8dbcce749adf61a60ca0ccf25fc041e4774a  chef-server-core_12.4.1-1_amd64.deb
-9bc701d90ba12c71fbe51a8bdcdf25e864375f4e  chef_12.7.2-1_amd64.deb
+${SERVER_SHA1}  chef-server-core_${SERVER_VERSION}-1_amd64.deb
+${CLIENT_SHA1}  chef_${CLIENT_VERSION}-1_amd64.deb
 EOF
 
-dpkg -i chef-server-core_12.4.1-1_amd64.deb chef_12.7.2-1_amd64.deb
+dpkg -i chef-server-core_${SERVER_VERSION}-1_amd64.deb chef_${CLIENT_VERSION}-1_amd64.deb
 
 # Extra setup
 rm -rf /etc/opscode
