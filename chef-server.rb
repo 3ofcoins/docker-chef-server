@@ -25,6 +25,7 @@ end
 
 bookshelf['external_url'] = _uri.to_s
 bookshelf['url'] = _uri.to_s
+nginx['enable'] = true
 nginx['enable_non_ssl'] = true
 nginx['url'] = _uri.to_s
 nginx['x_forwarded_proto'] = _uri.scheme

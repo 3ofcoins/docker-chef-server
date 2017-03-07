@@ -1,0 +1,11 @@
+version: "2"
+services:
+    app:
+        build: .
+        ports:
+            - "80:80"
+            - "443:443"
+        environment:
+            PUBLIC_URL: "https://localhost"
+        volumes:
+            - "./tmp/data:/var/opt"

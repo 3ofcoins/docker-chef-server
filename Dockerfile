@@ -1,10 +1,10 @@
 # -*- conf -*-
 
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 MAINTAINER Maciej Pasternacki <maciej@3ofcoins.net>
 
 EXPOSE 80 443
-VOLUME /var/opt/opscode
+VOLUME /var/opt/
 
 COPY install.sh /tmp/install.sh
 
