@@ -90,6 +90,12 @@ log 'Preparing configuration ...'
 FileUtils.mkdir_p %w'/var/opt/opscode/log /var/opt/opscode/etc /.chef/env', verbose: true
 FileUtils.cp '/.chef/chef-server.rb', '/var/opt/opscode/etc', verbose: true
 
+begin
+  hostn = File.read("/var/opt/opscode/hostname").chomp
+rescue
+  hostn = ""
+end
+
 %w'PUBLIC_URL OC_ID_ADMINISTRATORS'.each do |var|
   File.write(File.join('/.chef/env', var), ENV[var].to_s)
 end
@@ -119,6 +125,11 @@ Signal.trap 'USR1' do
   log 'Chef Server status:'
   run! '/usr/bin/chef-server-ctl', 'status'
 end
+
+unless hostn.eql? `hostname`.strip
+  reconfigure! 'New container'
+end
+File.write('/var/opt/opscode/hostname',`hostname`.strip)
 
 unless File.exist? '/var/opt/opscode/bootstrapped'
   reconfigure! 'Not bootstrapped'

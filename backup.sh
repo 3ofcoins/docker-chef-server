@@ -17,7 +17,7 @@ done
 
 mkdir organizations
 for org in $(chef-server-ctl org-list) ; do
-    chef-server-ctl org-show -l -F json $org > organizations/$org.json
+    chef-server-ctl org-show -F json $org > organizations/$org.json
     mkdir organizations/$org
     env CHEF_ORGANIZATION=$org knife download --chef-repo-path=organizations/$org /
 done
