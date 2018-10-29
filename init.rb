@@ -90,12 +90,6 @@ log 'Preparing configuration ...'
 FileUtils.mkdir_p %w'/var/opt/opscode/log /var/opt/opscode/etc /.chef/env', verbose: true
 FileUtils.cp '/.chef/chef-server.rb', '/var/opt/opscode/etc', verbose: true
 
-begin
-  hostn = File.read("/var/opt/opscode/hostname").chomp
-rescue
-  hostn = ""
-end
-
 %w'PUBLIC_URL OC_ID_ADMINISTRATORS'.each do |var|
   File.write(File.join('/.chef/env', var), ENV[var].to_s)
 end
@@ -126,13 +120,29 @@ Signal.trap 'USR1' do
   run! '/usr/bin/chef-server-ctl', 'status'
 end
 
-unless hostn.eql? `hostname`.strip
-  reconfigure! 'New container'
-end
-File.write('/var/opt/opscode/hostname',`hostname`.strip)
-
-unless File.exist? '/var/opt/opscode/bootstrapped'
+PKG_VERSION_FILE = '/var/opt/opscode/.chef-server-package-version'
+pkg_version = `dpkg -s chef-server-core | awk '/^Version:/ { print $2 }'`.strip
+if File.exist? '/var/opt/opscode/bootstrapped'
+  last_pkg_version = File.exist?(PKG_VERSION_FILE) ?
+                       File.read(PKG_VERSION_FILE).strip :
+                       '(UNKNOWN)'
+  if last_pkg_version != pkg_version
+    log "Chef Server version #{pkg_version} different from previous #{last_pkg_version}, upgrading..."
+    # Following https://docs.chef.io/upgrade_server.html
+    run! 'chef-server-ctl', 'stop' do
+      raise "chef-server-ctl stop: #{$?}" unless $?.success?
+      run! 'chef-server-ctl', 'upgrade' do
+        raise "chef-server-ctl upgrade: #{$?}" unless $?.success?
+        log "Starting Chef Server after upgrade. Please run chef-server-ctl cleanup at some point."
+        run! 'chef-server-ctl start'
+        File.write(PKG_VERSION_FILE, pkg_version)
+      end
+    end
+  end
+else
+  # not bootstrapped
   reconfigure! 'Not bootstrapped'
+  File.write(PKG_VERSION_FILE, pkg_version)
 end
 
 loop do

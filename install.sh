@@ -1,10 +1,14 @@
 #!/bin/sh
 set -e -x
 
-SERVER_VERSION="12.10.0"
-SERVER_SHA1="95fce9f167972418b3f06b9e5fe95f8a3f0e5361"
-CLIENT_VERSION="12.16.42"
-CLIENT_SHA1="e720803538b5db3cc9924121e3aa9e5a7a03cf79"
+## You can update the versions and SHA256 from the download page in
+## comments above.
+# https://downloads.chef.io/chef-server#ubuntu
+SERVER_VERSION="12.18.14"
+SERVER_SHA256="2be59db9ac71c5595ffd605e96de81fc3ef36aa4756fa73b2be9a53edbfce809"
+# https://downloads.chef.io/chef/14.6.47#ubuntu
+CLIENT_VERSION="14.6.47"
+CLIENT_SHA256="81dc8634609493a8e9c9dbcb027855027812c902db95e1884b18fe368acbd047"
 
 # Temporary work dir
 tmpdir="`mktemp -d`"
@@ -13,16 +17,15 @@ cd "$tmpdir"
 # Install prerequisites
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q --yes
-apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates upstart-sysv # chefserver is not yet compatible with systemd
-update-initramfs -u
+apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates
 
 # Download and install Chef's packages
-wget -nv https://packages.chef.io/stable/ubuntu/16.04/chef-server-core_${SERVER_VERSION}-1_amd64.deb
-wget -nv https://packages.chef.io/stable/ubuntu/16.04/chef_${CLIENT_VERSION}-1_amd64.deb
+wget -nv https://packages.chef.io/files/stable/chef-server/${SERVER_VERSION}/ubuntu/16.04/chef-server-core_${SERVER_VERSION}-1_amd64.deb
+wget -nv https://packages.chef.io/files/stable/chef/${CLIENT_VERSION}/ubuntu/16.04/chef_${CLIENT_VERSION}-1_amd64.deb
 
-sha1sum -c - <<EOF
-${SERVER_SHA1}  chef-server-core_${SERVER_VERSION}-1_amd64.deb
-${CLIENT_SHA1}  chef_${CLIENT_VERSION}-1_amd64.deb
+sha256sum -c - <<EOF
+${SERVER_SHA256}  chef-server-core_${SERVER_VERSION}-1_amd64.deb
+${CLIENT_SHA256}  chef_${CLIENT_VERSION}-1_amd64.deb
 EOF
 
 dpkg -i chef-server-core_${SERVER_VERSION}-1_amd64.deb chef_${CLIENT_VERSION}-1_amd64.deb

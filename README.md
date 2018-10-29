@@ -4,7 +4,7 @@ Chef Server
 This image runs
 [Chef Server 12](https://downloads.getchef.com/chef-server/). The
 latest version is published as `quay.io/3ofcoins/chef-server:latest`. Version
-tags are available; current one is `quay.io/3ofcoins/chef-server:12.8.0`.
+tags are available; current one is `quay.io/3ofcoins/chef-server:12.18.14`.
 
 Git repository containing the Dockerfile lives at
 https://github.com/3ofcoins/docker-chef-server/
@@ -44,18 +44,23 @@ Usage
 
 ### Prerequisites and first start
 
-The `kernel.shmmax` and `kernel.shmall` sysctl values should be set to
-a high value on the host. You may also run Chef server as a privileged
-container to let it autoconfigure -- but the setting will propagate to
-host anyway, and it would be the only reason for making the container
-privileged, so it is better to avoid it.
-
 First start will automatically run `chef-server-ctl
 reconfigure`. Subsequent starts will not run `reconfigure`, unless
-file `/var/opt/opscode/bootstrapped` has been deleted. You can run
-`reconfigure` (e.g. after editing `etc/chef-server.rb`) using
-`docker-enter` or by sending SIGHUP to the container: `docker kill
--HUP $CONTAINER_ID`.
+file `/var/opt/opscode/bootstrapped` has been deleted or hostname has
+changed (i.e. on upgrade). You can run `reconfigure` (e.g. after
+editing `etc/chef-server.rb`) using `docker-enter` or by sending
+SIGHUP to the container: `docker kill -HUP $CONTAINER_ID`.
+
+### Upgrading
+
+Just kill the old container and start a new one using the same data
+volume. The image will automatically run `chef-server-ctl upgrade`
+when version of `chef-server-core` package changes. You will need to
+run `chef-server-ctl cleanup` afterwards.
+
+If the repository is lagging, to build a new image with new Chef
+Server version, all you need to do is update the variables on top of
+the [`install.sh`](install.sh) script.
 
 ### Maintenance commands
 
@@ -172,3 +177,11 @@ upgrade` via `docker exec`.
 **UNSUPPORTED.** No idea how to handle this (especially that this is
 the point at which licensing issues start to occur). Most likely, a
 separate image based off this one would be necessary.
+
+Alternatives
+------------
+
+An alternative image is maintained at
+https://github.com/trueability/docker-chef-server /
+https://hub.docker.com/r/trueability/chef-server/ and it might be more
+frequently updated than this one.
