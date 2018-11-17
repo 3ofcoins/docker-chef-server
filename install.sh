@@ -17,7 +17,14 @@ cd "$tmpdir"
 # Install prerequisites
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q --yes
-apt-get install -q --yes logrotate vim-nox hardlink wget ca-certificates
+apt-get install -q --yes \
+    logrotate \
+    vim-nox \
+    hardlink \
+    wget \
+    ca-certificates \
+    rsync \
+    nano
 
 # Download and install Chef's packages
 wget -nv https://packages.chef.io/files/stable/chef-server/${SERVER_VERSION}/ubuntu/16.04/chef-server-core_${SERVER_VERSION}-1_amd64.deb

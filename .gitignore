@@ -1,3 +1,6 @@
 # avoid adding .deb during development
 *.deb
 tmp/
+
+# Ignore Intellij Files
+.idea
